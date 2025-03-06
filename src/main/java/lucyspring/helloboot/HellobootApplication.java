@@ -11,49 +11,38 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.web.context.support.GenericWebApplicationContext;
+import org.springframework.web.servlet.DispatcherServlet;
 
 import java.io.IOException;
 
 //@SpringBootApplication
+@Configuration // 이 안에 @Bean이 붙은 Factory 메소드가 있겠다고 판단할 것
+@ComponentScan // @Component가 붙은 클래스를 찾아서 빈으로 등록해달라 -> 새로운 빈을 만들어서 추가할 때 간편(자동 등록)
 public class HellobootApplication {
+	@Bean
+	public ServletWebServerFactory servletWebServerFactory() {
+		return new TomcatServletWebServerFactory();
+	}
+
+	@Bean
+	public DispatcherServlet dispatcherServlet() {
+		return new DispatcherServlet();
+	}
 
 	public static void main(String[] args) {
-		//SpringApplication.run(HellobootApplication.class, args);
-		TomcatServletWebServerFactory serverFactory = new TomcatServletWebServerFactory();
-		WebServer webServer = serverFactory.getWebServer(servletContext -> {
-			HelloController helloController = new HelloController();
-
-			servletContext.addServlet("frontcontroller", new HttpServlet() {
-				@Override
-				protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-					// 인증, 보안, 다국어, 공통 기능
-					if(req.getRequestURI().equals("/hello") && req.getMethod().equals(HttpMethod.GET.name())) {
-						///  요청 객체 사용
-						String name = req.getParameter("name");
-
-						String ret = helloController.hello(name);
-
-						/// 응답 객체
-						resp.setStatus(HttpStatus.OK.value());
-						resp.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE);
-						resp.getWriter().println(ret);
-					}
-
-					else if (req.getRequestURI().equals("/user")){
-						//
-					}
-
-					else {
-						resp.setStatus((HttpStatus.NOT_FOUND.value()));
-					}
-				}
-			}).addMapping("/*"); // 모든 요청 처리(프론트 컨트롤러)
-		});
-		webServer.start();
+		MySpringApplication.run(HellobootApplication.class, args);
 	}
 
 }
